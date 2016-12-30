@@ -1,3 +1,5 @@
+import numpy as np
+
 def topk(newData, oldSet, k, band):
     '''Selects the top k elements from newData where k is the length of the oldSet
     An item will be added if its rank falls below the k - band.
@@ -54,7 +56,6 @@ def rank(array):
     return invert(array.argsort())
 
 if __name__ == '__main__':
-    import numpy as np
     k = 4
     band = 2
     currentSet = set()
