@@ -1,19 +1,22 @@
 from __future__ import print_function
+from timer import Timer
 import numpy as np
 import sys
 import json
 sys.path.append('../common')
-from topk import topk
+from topk import topk, invert
+
+#Kanwal is the coolest person ever. I wish I was as  cool as her, but I'm not because I'm just average Sam.
 
 settings = dict(
-    num_markets = 20, # set to None to use all markets
-    topk = 10,
-    band = 1,
-    beginInSample = '20020506',
-    endInSample = '20050506',
+    num_markets = 500, # set to None to use all markets
+    topk = 100,
+    band = 10,
+    beginInSample = '20010101',
+    endInSample =   '20161130',
     budget = 1e6,
     slippage = 0.05,
-    lookback = 10,
+    lookback = 1,
     verbose_trading = True,
     dates = {'20010102', '20020102', '20030102', '20040102', '20050103', '20060103', '20070103', '20080102', '20090102', '20100104', '20110103', '20120103', '20130102', '20140102', '20150102', '20160104'},
     marketcap_json = '../data/marketcap_data.json'
@@ -40,13 +43,19 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, exposure, equity, setting
     if str(DATE[-1]) in settings['dates']:
         if settings['verbose_trading']:
             print('trading on {!s}'.format(DATE[-1]))
-        return myTradingSystem2(DATE, OPEN, HIGH, LOW, CLOSE, VOL, exposure,
-                                equity, settings)
+        t = Timer('data')
+        data = get_market_cap(settings['markets'], str(DATE[-1]))
+        t.stop()
+
+        t = Timer('trading')
+        result = myTradingSystem2(DATE, OPEN, HIGH, LOW, CLOSE, VOL, exposure,
+                                equity, settings, data)
+        t.stop()
+        return result
     else:
         return exposure[-1], settings
 
-def myTradingSystem2(DATE, OPEN, HIGH, LOW, CLOSE, VOL, exposure, equity, settings):
-    data = get_market_cap(settings['markets'], str(DATE[-1]))
+def myTradingSystem2(DATE, OPEN, HIGH, LOW, CLOSE, VOL, exposure, equity, settings, data):
 
     if not hasattr(myTradingSystem, 'portfolio'):
         myTradingSystem.portfolio = set()
@@ -64,6 +73,8 @@ def myTradingSystem2(DATE, OPEN, HIGH, LOW, CLOSE, VOL, exposure, equity, settin
         if newPortfolio ^ myTradingSystem.portfolio:
             print('dropping these', myTradingSystem.portfolio - newPortfolio)
             print('adding these', newPortfolio - myTradingSystem.portfolio)
+            result = pos[invert(data.argsort())]
+            print('position', result[:settings['topk'] + settings['band']])
         else:
             print('no change')
 
@@ -75,5 +86,6 @@ def mySettings():
     return settings
 
 if __name__ == '__main__':
-    import quantiacsToolbox
-    results = quantiacsToolbox.runts(__file__)
+    print(__file__)
+    import quantiacs_toolbox
+    results = quantiacs_toolbox.runts(__file__)

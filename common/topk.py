@@ -78,4 +78,4 @@ if __name__ == '__main__':
 
     print('all tests run')
 
-__all__ = ['topk']
+__all__ = ['topk', 'invert']
